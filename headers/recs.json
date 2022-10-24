@@ -1,0 +1,21 @@
+{
+  "accept": "application/json",
+  "accept-language": "es-ES,es",
+  "app-session-id": "8ae55029-8691-434e-a83b-d67e7e715fa8",
+  "app-session-time-elapsed": "-5084408",
+  "app-version": "1034900",
+  "persistent-device-id": "01034305-a4dc-4d0c-ae1e-17372b9271eb",
+  "platform": "web",
+  "sec-ch-ua": "\"Chromium\";v=\"106\", \"Google Chrome\";v=\"106\", \"Not;A=Brand\";v=\"99\"",
+  "sec-ch-ua-mobile": "?0",
+  "sec-ch-ua-platform": "\"Windows\"",
+  "sec-fetch-dest": "empty",
+  "sec-fetch-mode": "cors",
+  "sec-fetch-site": "cross-site",
+  "support-short-video": "1",
+  "tinder-version": "3.49.0",
+  "user-session-id": "5ddd4729-2b09-4b68-a219-2661fb8fe3d7",
+  "user-session-time-elapsed": "2816",
+  "x-auth-token": "20cc924b-85eb-4510-a93e-1ec62dd973db",
+  "x-supported-image-formats": "webp,jpeg"
+}
