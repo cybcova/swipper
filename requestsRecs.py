@@ -33,10 +33,6 @@ def chooseAPhotoIdRandomly(photos):
   print("Numero de foto elegido: " + str(randomPhoto));
   return(photos[randomPhoto]["id"])
 
-def tiempoTransacurrido(start):
-  print("Tiempo Transcurrido: ")
-  print(time.time() - start)
-
 
 
 ###Empezamos
@@ -47,36 +43,48 @@ dbname = get_database()
 collection_users = dbname["users"]
 collection_requests = dbname["requests"]
 collection_responses = dbname["responses"]
+collection_swipes = dbname["swipes"]
+
+finalSwipe = {}
 
 recsJson = json.load(open('./ejmploRecs.json'))
+
+bannedWordsForShortBio=["instagram", "onlyfans","ig ","of ","ig:","of:","@","sigueme"]
+bannedWords=["trans ", "tranny ","tv ","transexual","⚧️","🏳️‍⚧️"]
 #recsJson = getRecs() #TODO
 
 processedProfiles = 0;
 while len(recsJson["data"]["results"]) > 0 :
   for singleResult in recsJson["data"]["results"]:
     user = singleResult["user"]
+
+    print(user["name"])
     
-    cursor = collection_users.find_one({"_id":user["_id"]})
+    cursor = collection_users.find_one({"user._id":user["_id"]})
     print(cursor)
     if(cursor):
       print("USUARIO REPETIDO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
       print("pausado....")
-      nombre = input()
+      input()
       continue;
+
+    finalSwipe["_id"] = user["_id"]
     
-    collection_users.insert_one(user)
+    collection_users.insert_one(singleResult)
 
-    print(user["name"])
-
-    iLike = True
+    reasonIPass=""
 
     if(len(user["bio"])==0):
-      iLike=False
-    else:
-      if(len(user["bio"])<15):
-        iLike=False
+      reasonIPass += "No bio "
+    elif(len(user["bio"])<15 and any(ele in user["bio"].lower() for ele in bannedWordsForShortBio)):
+      reasonIPass += "Just looking for Followers "
+    elif(any(ele in user["bio"].lower() for ele in bannedWords)):
+      reasonIPass += "Not interested because of Bio "
 
-    if(iLike):
+    if(singleResult["distance_mi"]>10):
+      reasonIPass += "Too Far "
+
+    if(reasonIPass==""):
       urlLike = "https://api.gotinder.com/like/"+ user["_id"] +"?locale=es-ES"
       idPhotoChoosen=chooseAPhotoIdRandomly(user["photos"]);
       bodyLike = {
@@ -87,14 +95,13 @@ while len(recsJson["data"]["results"]) > 0 :
 
       collection_requests.insert_one({"_id":user["_id"], "request" : {"url":urlLike, "data":json.dumps(bodyLike), "headers":headersLike}})
       responseLike = requests.post(urlLike, data=json.dumps(bodyLike), headers=headersLike)
-      print("Status Code", responseLike.status_code)
-      tiempoTransacurrido(start)
 
       if( responseLike.status_code != 200 ):
         raise Exception("Error responseLike codigo: " + responseLike.status_code)
 
       collection_responses.insert_one({"_id":user["_id"], "response" : responseLike.json()})
-      print("JSON responseLike ", responseLike.json())
+
+      finalSwipe["like"] = True
 
     else:
       urlPass = "https://api.gotinder.com/pass/" + user["_id"] + "?locale=es-ES&s_number=" + str(singleResult["s_number"])
@@ -102,38 +109,32 @@ while len(recsJson["data"]["results"]) > 0 :
 
       collection_requests.insert_one({"_id":user["_id"], "request" : {"url":urlPass, "headers":headersPass}})
       responsePass = requests.get(urlPass, headers=headersPass)
-      print("Status Code", responsePass.status_code)
-      tiempoTransacurrido(start)
 
       if( responsePass.status_code != 200 ):
         raise Exception("Error responsePass codigo: " + responsePass.status_code)
 
       collection_responses.insert_one({"_id":user["_id"], "response" : responsePass.json()})
-      print("JSON responsePass ", responsePass.json())
+      
+      finalSwipe["like"] = False
+      finalSwipe["reasonIPass"] = reasonIPass
 
-    print("Me gusta: " +  ("Si" if iLike else "No"))
+    
+    collection_swipes.insert_one(finalSwipe)
+    print("Me gusta: " +  ("Si" if reasonIPass=="" else "No"))
+
 
     processedProfiles +=1
-    if(processedProfiles >=500):
-      print("Total de perfiles procesados: " +  str(processedProfiles))
-      exit()
     #tiempoEspera = round(random.uniform(0, 0.4), 3);
     tiempoEspera = round(random.uniform(2.5, 4), 3); #TODO
     print("Se continua en: " + str(tiempoEspera))
     sleep(tiempoEspera)
 
+
+  if(processedProfiles >=100):
+    break;
   recsJson = getRecs() #TODO
   
   #End While
   
 print("Total de perfiles procesados: " + str(processedProfiles))
-
-
-
-
-
-
-
-
-
 
