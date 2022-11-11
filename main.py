@@ -51,8 +51,9 @@ headersRecs = json.load(open('./headers/recs.json'));
 headersLike = json.load(open('./headers/like.json'));
 headersPass = json.load(open('./headers/pass.json'));
 
-bannedWordsForShortBio=["instagram", "onlyfans","ig ","of ","ig:","of:","@","sigueme"]
-bannedWords=["sd", "sb"]
+bannedPatternsForShortBio="\W?(instagram)\W|\W?(onlyfans)\W|\W?(ig)\W|\W?(of)\W|\W?(sigueme)\W|\W?(follow me)\W|\W?(@)\w+"
+bannedPatterns="\W?(sd)\W|\W?(sb)\W|\W?(tv)\W|\W?(trans)\W|\W?(tranny)\W|\W?(travesti)\W|\W?(transexual)\W|(⚧️)|(🏳️‍⚧️)"
+
 recsJson = getRecs() #TODO
 #recsJson = json.load(open('./ejmploRecs.json'))
 
@@ -86,12 +87,12 @@ while len(recsJson["data"]["results"]) > 0 :
 
     if(len(user["bio"])==0): 
       reasonIPass += "No bio "
-    elif(len(user["bio"])<15 and any(ele in user["bio"].lower() for ele in bannedWordsForShortBio)):
+    elif(len(user["bio"])<15 and re.search(bannedPatternsForShortBio, user["bio"].lower())):
       reasonIPass += "Just looking for Followers "
-    elif(any(ele in user["bio"].lower() for ele in bannedWords)):
+    elif(re.search(bannedPatterns, user["bio"].lower())):
       reasonIPass += "Not interested because of Bio "
 
-    if(singleResult["distance_mi"]>10):
+    if(singleResult["distance_mi"]>9):
       reasonIPass += "Too Far "
 
     finalSwipe["like"] = True if reasonIPass=="" else False
