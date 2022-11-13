@@ -79,7 +79,7 @@ while len(recsJson["data"]["results"]) > 0 :
     if(oldUser):
       printNlog("USUARIO REPETIDO!")
       printNlog("pausado....")
-      input()
+      #input()
     else:
       dbname["users"].insert_one(singleResult)
     
@@ -133,12 +133,12 @@ while len(recsJson["data"]["results"]) > 0 :
     processedProfiles +=1
 
     #Let's wait some time so tinder doesn't think im a bot
-    breakTime = round(random.uniform(2.5, 4), 3); #TODO
+    breakTime = round(random.uniform(2.5, 7), 3); #TODO
     printNlog("Swipes: " + str(totalLikes) + " likes " + str(totalpasses) + " passes " + str(processedProfiles) + " profiles swipped in total")
     printNlog("Continue in: " + str(breakTime))
     sleep(breakTime)
   
-  if(processedProfiles >=150):
+  if(processedProfiles >=550):
     printNlog("\nEnough profiles processed")
     break
 
