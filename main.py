@@ -38,7 +38,11 @@ def chooseAPhotoIdRandomly(photos):
   randomPhoto = random.randint(0, lenPhotos-1)
   return(photos[randomPhoto]["id"])
 
-def likePassRequest(url, headersJson, body):
+def likePassRequest(url, headersJson, body, oldUser):
+  if(oldUser):
+      dbname["requests"].delete_one({"_id": user["_id"]})
+      dbname["responses"].delete_one({"_id": user["_id"]})
+
   dbname["requests"].insert_one({"_id":user["_id"], "request" : {"url":url, "data":json.dumps(body), "headers":headersJson}})
   response = requests.post(url, data=json.dumps(body), headers=headersJson) if body else requests.get(url, headers=headersJson)
   if( response.status_code != 200 ): raise Exception("Error response codigo: " + response.status_code)
@@ -71,17 +75,16 @@ while len(recsJson["data"]["results"]) > 0 :
     printNlog("bio: " + (user["bio"][:27] + "...") if len(user["bio"])>=30 else user["bio"])
     printNlog("distance: " + str(singleResult["distance_mi"] * 1.60934) + " km")
     
-    cursor = dbname["users"].find_one({"user._id":user["_id"]})
-    if(cursor):
+    oldUser = dbname["users"].find_one({"user._id":user["_id"]})
+    if(oldUser):
       printNlog("USUARIO REPETIDO!")
       printNlog("pausado....")
       input()
-      continue;
+    else:
+      dbname["users"].insert_one(singleResult)
     
     finalSwipe = {}
     finalSwipe["_id"] = user["_id"]
-    
-    dbname["users"].insert_one(singleResult)
 
     reasonIPass=""
 
@@ -105,7 +108,7 @@ while len(recsJson["data"]["results"]) > 0 :
           "liked_content_id": idPhotoChoosen,
           "liked_content_type": "photo"
       }
-      response = likePassRequest(urlLike, headersLike, bodyLike)
+      response = likePassRequest(urlLike, headersLike, bodyLike, oldUser)
       match = response.json()["match"];
       finalSwipe["match"] = match
       if match : printNlog("It was a Match!!")
@@ -113,7 +116,7 @@ while len(recsJson["data"]["results"]) > 0 :
 
     else:
       urlPass = "https://api.gotinder.com/pass/" + user["_id"] + "?locale=es-ES&s_number=" + str(singleResult["s_number"])
-      likePassRequest(urlPass, headersPass, None)
+      likePassRequest(urlPass, headersPass, None, oldUser)
       finalSwipe["reasonIPass"] = reasonIPass
       totalpasses += 1
 
@@ -121,7 +124,12 @@ while len(recsJson["data"]["results"]) > 0 :
     if reasonIPass!="": printNlog("Reason :" + reasonIPass)
 
     finalSwipe["registration_date"] = datetime.today()
+    
+    if(oldUser):
+      dbname["swipes"].delete_one({"_id": user["_id"]})
+      
     dbname["swipes"].insert_one(finalSwipe)
+
     processedProfiles +=1
 
     #Let's wait some time so tinder doesn't think im a bot
